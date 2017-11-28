@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang = "en" class="tas-com">
+<head>
+	<meta charset="utf-8">
+	<title>D3: Moving Line Charts</title>
+	<link href="./themes/prism.css" rel="stylesheet" />
+	<link href="./themes/tas_style.css" rel="stylesheet" />
+	<script type="text/javascript" src="./d3/d3.v4.js" charset="utf-8"></script>
+	<script type="text/javascript" src="./d3/bar_plot.js" charset="utf-8"></script>
+	<script type="text/javascript" src="./d3/bar_plot2.js" charset="utf-8"></script>
+	<script type="text/javascript" src="./d3/extra_feature.js" charset="utf-8"></script>
+	<script src="./lib/prism.js" charset="utf-8"></script>
+	<style type="text/css">
+		.axis path,
+		.axis line {
+		    fill: none;
+		    stroke: white;
+		    shape-rendering: crispEdges;
+		}
+		
+		.axis text {
+		    font-family: sans-serif;
+		    font-size: 11px;
+		    stroke: white;
+		}	
+		.resumeButton {
+		    display:block;
+		    color:#444;
+		    border:1px solid #CCC;
+		    background:#DDD;
+		    box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+		    cursor:pointer;
+		    vertical-align:middle;
+		    max-width: 100px;
+		    padding: 5px;
+		    position: relative;
+		    left: 300px;
+		    text-align: center;
+			background: white;
+			border-radius: 50px;
+			cursor: pointer;
+		}
+		.startButton {
+		    display:block;
+		    color:#444;
+		    margin-top:7px;
+		    border:1px solid #CCC;
+		    background:#DDD;
+		    box-shadow: 0 0 5px -1px rgba(0,0,0,0.2);
+		    cursor:pointer;
+		    vertical-align:middle;
+		    max-width: 800px;
+		    text-align: center;
+		}
+		#bar_plot1{
+			position: absolute;
+			right: 0;
+			margin-top: 300px;
+			margin-right: 25px;
+		}
+
+		#bar_plot2{
+			position: absolute;
+			right: 0;
+			margin-top: -100px;
+			margin-right: 25px;
+		}
+		#extra_feature{
+			position: absolute;
+			left: 800px;
+			top: 30px;
+		}
+		#y-axis{
+			text-transform: capitalize;
+		}
+
+	</style>
+</head>
+<body style="background-color: black">
+
+	<h1>HANS ROSLING</h1>
+	<div id="startButton" type="button" class= "resumeButton" style="width: 800px; margin-bottom: 20px; color:gray; cursor: pointer">&#9658; PLAY
+		</div>
+	<div id="myButton" type="text" style="width: 800px; color:gray;">Select Year
+		<br>
+	</div>
+	<br>
+		
+	<div id="bar_plot1">
+	</div>
+	<div id="bar_plot2">
+	</div>
+	<div id="extra_feature">
+	</div>
+	<div class = "demo">
+	
+		<script type="text/javascript" id = "demo_code">
+// Define margins
+var margin = {top: 50, right: 20, bottom: 100, left: 30};
+
+//Width and height
+var outer_width = 1000;
+var outer_height = 600;
+var svg_width = outer_width - margin.left - margin.right;
+var svg_height = outer_height - margin.top - margin.bottom;
+
+//Define a date parser
+var formatDate = d3.timeParse("%d/%m/%y");
+countryColorMap = []
+
+// The global data set object
+var dataset;
+
+
+// Set up the scale to be used on the x axis
+xScale = d3.scaleLog()
+				.range([0, svg_width]);
+
+// Set up the scale to be used on the y axis
+yScale = d3.scaleLinear()
+				.range([svg_height, 0]);
+
+rScale = d3.scaleLinear()
+				.range([0, Math.sqrt(svg_height) * 4])
+			
+// Create an x-axis connected to the x scale
+var xAxis = d3.axisBottom()
+			  	.scale(xScale)
+				.ticks(10,"d")
+
+
+//Define Y axis
+var yAxis = d3.axisLeft()
+				  .scale(yScale)
+				  .ticks(10);
+							  
+
+
+//Create SVG element as a group with the margins transform applied to it
+var svg = d3.select("body")
+			.append("svg")
+			.attr("width", svg_width + margin.left + margin.right)
+			.attr("height", svg_height + margin.top + margin.bottom)
+			.append("g")
+			.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var yearToDisplayBehind = svg.append("text")
+							.attr("x",200)
+							.attr("y",250)
+							.attr("dy", ".35em")
+							.style("fill","white")
+							.style("font-size",250)
+							.style("opacity",0.3)
+			
+
+getColorInArray = ["green","blue","orange","red","gray","violet","aqua","brown"]
+
+function getColorByRegion(regionList){
+	for(var rIndex= 0; rIndex < regionList.length; rIndex ++){
+		countryColorMap[regionList[rIndex]] = getColorInArray[rIndex]
+	}
+}
+
+function generateVis(display_year, clicked_country = ""){
+
+	  	var filtered_datset = dataset.filter(function yearFilter(value){
+	  				// if a country is clicked, store the class as country_circle / country_label and filter data
+	  				// based on that country
+
+	  				if(clicked_country != ""){
+	  					class_of_cirle = "country_circle";
+	  					class_of_countryName = "country_label";
+	  					return value.Country == clicked_country;
+	  				}
+	  				// otherwise store the class as year_circle / year_label and filter data
+	  				// based on that Year
+	  				class_of_cirle = "year_circle";
+	  				class_of_countryName = "year_label"
+					return (value.Year == display_year)});
+
+	  	var points = svg.selectAll("circle."+class_of_cirle)
+		  				 .data(filtered_datset, function key(d) {
+									return d.Country;
+									});
+
+	
+			//Enter section
+			points.enter()
+				.append("circle")
+					.attr("class",class_of_cirle)
+					.attr("id", function(d){ return d.Country})
+					.attr("cx", function(d){
+										return xScale(d.GDP);
+									})
+					.attr("cy", function(d){
+										return yScale(d.LifeExp);
+									})
+					.attr("r", function(d){
+										return rScale(Math.sqrt(d.Population/Math.PI));
+									})
+					.style("fill", function(d){ return countryColorMap[d.Region]})
+					.append("title")
+				   		.text(function(d){
+				   			return d.Country;
+				   			});
+
+			yearToDisplayBehind.text(display_year);
+
+
+			//Update section
+			points
+				.transition()
+				.duration(500)
+				.attr("id", function(d){return d.Country})
+				.attr("class",class_of_cirle)
+				.attr("cx", function(d){
+									return xScale(d.GDP);
+								})
+				.attr("cy", function(d){
+									return yScale(d.LifeExp);
+								})
+				.attr("r", function(d){
+									return rScale(Math.sqrt(d.Population/Math.PI));
+								})
+				.style("fill", function(d){ return countryColorMap[d.Region]});
+
+		   	points.on("mouseover", function(d){
+				d3.select(this)
+					.transition()
+					.duration(500)
+					.style("cursor", "pointer")
+				})
+		
+			points.on("click", function(d){
+				clickedCircle = this
+				clickedCountry = this.id
+				generateVis(display_year,clickedCountry);
+
+				// Change opacity of the clicked year circle to 0.6 and all others to 0.2
+				d3.selectAll("circle.year_circle")
+					.attr("opacity", function(d){
+						return this === clickedCircle ? 0.6 : 0.2;
+					})
+				d3.selectAll(".year_label")
+					.attr("opacity",function(d){
+						this.parentNode.appendChild(this);
+						return d.Country === clickedCountry ? 1 : 0.1; 
+					})
+				// Change the play button from stop to play and clear the interval to stop in that year
+				d3.select("#startButton").html("&#9658; PLAY");
+				if(typeof(myInterval) != 'undefined'){
+						clearInterval(myInterval);
+					}
+			});
+		
+		//EXIT section
+			points.exit().remove();
+
+		if(clicked_country == ""){
+			svg.selectAll(".country_circle").remove();
+			d3.selectAll("circle.year_circle").attr("opacity", 0.6)
+			d3.selectAll(".year_label").attr("opacity",0.6);
+
+		 	var countryName = svg.selectAll("#countryName")
+		  				 	.data(filtered_datset, function key(d){
+		  				 		return d.Country;
+		  				 	})
+			countryName.enter()
+				.append("text")
+				.attr("class",class_of_countryName)
+			    .attr("x", function(d){ return xScale(d.GDP)})
+			    .attr("y", function(d){ return yScale(d.LifeExp)})
+			    .attr("text-anchor", "middle")
+			    .style("fill", "white")
+			    .attr("opacity", 0.6)
+			    .attr("id","countryName")
+			    .attr("font-size", function(d) { return (Math.sqrt(d.Population/Math.PI)/400);})
+			    .text(function(d) { return d.Country; });
+
+			countryName
+				.transition()
+				.duration(500)
+				.attr("class",class_of_countryName)
+			    .attr("x", function(d){ return xScale(d.GDP)})
+			    .attr("y", function(d){ return yScale(d.LifeExp)})
+			    .attr("text-anchor", "middle")
+			    .style("fill", "white")
+			    .attr("id","countryName")
+			    .attr("font-size", function(d) { return (Math.sqrt(d.Population/Math.PI)/400);})
+			    .text(function(d) { return d.Country; });
+			countryName.exit().remove();
+		 }
+}
+
+// Load the file data.csv and generate a visualisation based on it
+	d3.csv("./data/Gapminder_All_Time.csv", function(error, data){
+		
+		years = d3.map(data, function(d) { return d.Year}).keys().sort()
+		display_year = years[0]
+
+		var regionList = d3.map(data, function(d) { return d.Region}).keys()
+		getColorByRegion(regionList);
+
+		// handle any data loading errors
+		if(error){
+			console.log("Something went wrong");
+			console.log(error);
+		}else{
+			console.log("Data Loaded");
+
+			// convert each variable to numeric type and parse the date
+			data.forEach(function(d){ 
+						d['Year'] = +d['Year']; 
+						d['Population'] = +d['Population']; 
+						d['LifeExp'] = +d['LifeExp']; 
+						d['GDP'] = +d['GDP']; 
+						d['Area'] = +d['Area']; 
+						d['Coastline'] = +d['Coastline'];
+					});   		
+
+			// Assign  the data object loaded to the global dataset variable
+			dataset = data;
+
+			// Set the domains of the x and y scales using the data
+			var max_lifeExp = d3.max(dataset, function(d) { return d.LifeExp;} );
+			var min_lifeExp = d3.min(dataset, function(d) { return d.LifeExp;} );
+			var max_GDP = d3.max(dataset, function(d) { return d.GDP;} );
+			var min_GDP = d3.min(dataset, function(d) { return d.GDP;} );
+			var max_Population = d3.max(dataset, function(d) { return d.Population;} );
+			var min_Population = d3.min(dataset, function(d) { return d.Population;} );
+			var max_Year = d3.max(dataset, function(d) { return d.Year;} );
+			var min_Year = d3.min(dataset, function(d) { return d.Year;} );
+
+		
+			xScale.domain([min_GDP, max_GDP]);
+			yScale.domain([min_lifeExp -10, max_lifeExp]);
+			rScale.domain([Math.sqrt(min_Population/Math.PI), Math.sqrt(max_Population/Math.PI)])
+
+			// Create the x-axis
+			svg.append("g")
+				.attr("class", "axis")
+				.attr("id", "x-axis")
+				.attr("transform", "translate(0," + svg_height + ")")
+				.call(xAxis)
+				.append("text")
+					.attr("x", 6)
+					.attr("dx", "40.91em")
+					.attr("dy", "3.91em")
+					.style("text-anchor", "end")
+					.text("GDP");
+				
+			// Create the y axis
+			svg.append("g")
+				.attr("class", "axis")
+				.attr("id", "y-axis")
+				.call(yAxis)
+				.append("text")
+				      .attr("transform", "rotate(-90)")
+				      .attr("y", 6)
+				      .attr("dx", "0.11em")
+				      .attr("dy", ".71em")
+				      .style("text-anchor", "end")
+				      .text("Life Expectancy");
+
+			// Generate the visualisation
+			// generateVis(display_year);
+			// generateExtraFeature(display_year);
+
+			var myButton = d3.select("#myButton");
+
+
+			for(i=0;i<years.length;i++){
+				myButton.append("div")
+				.style("float","left")
+				.style("cursor","pointer")
+				.style("margin-left","20px")
+				.attr("class","startButton")
+				.attr("id",years[i])
+				.text(years[i])
+				.on("click",function(d){
+					display_year = d3.select(this).text();
+					generateVisPlot(display_year);
+					generateVisPlot2(display_year);
+					generateExtraFeature(display_year)
+					generateVis(display_year);
+					
+					// Change the Play button and clear the interval
+					d3.select("#startButton").html("&#9658; PLAY");
+					if(typeof(myInterval) == 'undefined'){
+						return;
+					}
+
+					clearInterval(myInterval);
+				})
+			}
+			
+ 			d3.select("#startButton")
+ 				.on("click", function(){
+ 				if(this.innerHTML == "|| STOP"){
+ 					clearInterval(myInterval);
+ 					this.innerHTML= "&#9658; PLAY";
+ 				}
+ 				else{
+ 					startPlaying();
+ 					this.innerHTML= "|| STOP";
+ 				}
+ 				})
+
+			// startPlaying();
+
+		}
+	});
+
+function startPlaying(){
+		myInterval = setInterval(function() {
+			// display_year = years[index]
+			generateVisPlot(display_year);
+			generateVisPlot2(display_year);
+			generateVis(display_year);
+			generateExtraFeature(display_year);
+			index = years.indexOf(display_year);
+			if(index == years.length -1){
+				index = -1;
+			}
+			index += 1
+			display_year = years[index];
+		  	
+		}, 700);
+}
+		</script>
+		</div>
+	</div>
+</body>	 
+</html>
