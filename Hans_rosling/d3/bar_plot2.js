@@ -31,6 +31,7 @@ var yearToDisplayBehind = svg.append("text")
 							.style("font-size",25)
 							.style("opacity",1)
 
+// define the x and y axis and x and y scale
 var yScale = d3.scaleBand()
 	                     .range([0, svg_height])
 	                     .paddingInner(0.05)
@@ -72,21 +73,20 @@ generateVisPlot2 = function generateVisPlot2(display_year){
 	var filtered_datset = dataset.filter(function yearFilter(value){
 					return (value.Year == display_year)});
 
+	// Rollup data to give a map of government vs list of countries with each government
 	var nested_data2 = d3.nest()
 						.key(function(d) { return d.Government; })
 						.key(function(d) { return d.Country; })
 						.rollup(function(d) { return d.Country; })
 						.entries(filtered_datset);
 
- 	/******** PERFORM DATA JOIN ************/
-  	// Join new data with old elements, if any.
+
   	var bars = 	svg.selectAll("rect")
 	   .data(nested_data2, function key(d) {
 								return d.key;
 							});
 
- 	/******** HANDLE UPDATE SELECTION ************/
-  	// Update the display of existing elelemnts to match new data
+  	// update section
   	bars
   		.transition()
 		.duration(500)
@@ -99,8 +99,8 @@ generateVisPlot2 = function generateVisPlot2(display_year){
 	   })
 	   .attr("height", yScale.bandwidth())
 		   
-	/******** HANDLE ENTER SELECTION ************/
-  	// Create new elements in the dataset
+	
+  	// enter section
   	bars.enter()
 		.append("rect")
 		.transition()
@@ -118,12 +118,9 @@ generateVisPlot2 = function generateVisPlot2(display_year){
 
 	yearToDisplayBehind.text("Year: " +display_year);
 
-	/******** HANDLE EXIT SELECTION ************/
-	// Remove bars that not longer have a matching data eleement
+	// Exit section
 	bars.exit().remove();
   		
-	// Set the year label
-	d3.select("#year_header").text("Year: " + display_year)
 
 }
 
@@ -151,11 +148,13 @@ d3.csv("./data/Gapminder_All_Time.csv", function(error, data){
 					.entries(dataset);
 
 		
-
+		// Calculate max and min for axes limits
 		max_count = d3.max(nested_data2, function(d) { return d.values.length;})
 		min_count = d3.min(nested_data2, function(d) { return d.values.length;})
+		// Give the domains for axes
 		xScale.domain([min_count-1, max_count+1]);
 		yScale.domain(dataset.map(function(d) { return d.Government; }));
+		// Call the axes
 		svg.select("#x-axis").call(xAxis);
 		svg.select("#y-axis").call(yAxis);
 		

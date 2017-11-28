@@ -6,8 +6,11 @@
 	<link href="./themes/prism.css" rel="stylesheet" />
 	<link href="./themes/tas_style.css" rel="stylesheet" />
 	<script type="text/javascript" src="./d3/d3.v4.js" charset="utf-8"></script>
+	<!-- Call bar_plot for Regions vs Number of countries -->
 	<script type="text/javascript" src="./d3/bar_plot.js" charset="utf-8"></script>
+	<!-- Call bar_plot2 for Govermments vs Number of countries -->
 	<script type="text/javascript" src="./d3/bar_plot2.js" charset="utf-8"></script>
+	<!-- Call Bar extra_feature for our extra feature -->
 	<script type="text/javascript" src="./d3/extra_feature.js" charset="utf-8"></script>
 	<script src="./lib/prism.js" charset="utf-8"></script>
 	<style type="text/css">
@@ -156,6 +159,7 @@ var yearToDisplayBehind = svg.append("text")
 getColorInArray = ["green","blue","orange","red","gray","violet","aqua","brown"]
 
 function getColorByRegion(regionList){
+	// Represent different regions with different colors
 	for(var rIndex= 0; rIndex < regionList.length; rIndex ++){
 		countryColorMap[regionList[rIndex]] = getColorInArray[rIndex]
 	}
@@ -178,6 +182,7 @@ function generateVis(display_year, clicked_country = ""){
 	  				class_of_countryName = "year_label"
 					return (value.Year == display_year)});
 
+	  	// select all circles corresponding to a year OR to a country
 	  	var points = svg.selectAll("circle."+class_of_cirle)
 		  				 .data(filtered_datset, function key(d) {
 									return d.Country;
@@ -204,6 +209,7 @@ function generateVis(display_year, clicked_country = ""){
 				   			return d.Country;
 				   			});
 
+			//Show the country on the background
 			yearToDisplayBehind.text(display_year);
 
 
@@ -230,17 +236,20 @@ function generateVis(display_year, clicked_country = ""){
 					.duration(500)
 					.style("cursor", "pointer")
 				})
-		
+			
+			// On clicking a circle, it calls the generateVis function again for that country (for all years) 
+			// instead of that year
 			points.on("click", function(d){
 				clickedCircle = this
 				clickedCountry = this.id
 				generateVis(display_year,clickedCountry);
 
-				// Change opacity of the clicked year circle to 0.6 and all others to 0.2
+				// Change opacity of the clicked circle to 0.6 and all others to 0.2
 				d3.selectAll("circle.year_circle")
 					.attr("opacity", function(d){
 						return this === clickedCircle ? 0.6 : 0.2;
 					})
+				// Change opacity of the clicked country name to 0.6(and bring it to front) and all others to 0.2
 				d3.selectAll(".year_label")
 					.attr("opacity",function(d){
 						this.parentNode.appendChild(this);
@@ -257,6 +266,7 @@ function generateVis(display_year, clicked_country = ""){
 			points.exit().remove();
 
 		if(clicked_country == ""){
+			// if there is no particular country clicked, then only add country names as the year changes
 			svg.selectAll(".country_circle").remove();
 			d3.selectAll("circle.year_circle").attr("opacity", 0.6)
 			d3.selectAll(".year_label").attr("opacity",0.6);
@@ -265,6 +275,7 @@ function generateVis(display_year, clicked_country = ""){
 		  				 	.data(filtered_datset, function key(d){
 		  				 		return d.Country;
 		  				 	})
+		  	// Enter section
 			countryName.enter()
 				.append("text")
 				.attr("class",class_of_countryName)
@@ -277,6 +288,7 @@ function generateVis(display_year, clicked_country = ""){
 			    .attr("font-size", function(d) { return (Math.sqrt(d.Population/Math.PI)/400);})
 			    .text(function(d) { return d.Country; });
 
+			// Update section
 			countryName
 				.transition()
 				.duration(500)
@@ -288,11 +300,13 @@ function generateVis(display_year, clicked_country = ""){
 			    .attr("id","countryName")
 			    .attr("font-size", function(d) { return (Math.sqrt(d.Population/Math.PI)/400);})
 			    .text(function(d) { return d.Country; });
+			
+			//Exit section
 			countryName.exit().remove();
 		 }
 }
 
-// Load the file data.csv and generate a visualisation based on it
+// Load the file Gapminder_All_Time.csv and generate a visualisation based on it
 	d3.csv("./data/Gapminder_All_Time.csv", function(error, data){
 		
 		years = d3.map(data, function(d) { return d.Year}).keys().sort()
@@ -321,7 +335,7 @@ function generateVis(display_year, clicked_country = ""){
 			// Assign  the data object loaded to the global dataset variable
 			dataset = data;
 
-			// Set the domains of the x and y scales using the data
+			// Get max and min of the variables required to set up the axes
 			var max_lifeExp = d3.max(dataset, function(d) { return d.LifeExp;} );
 			var min_lifeExp = d3.min(dataset, function(d) { return d.LifeExp;} );
 			var max_GDP = d3.max(dataset, function(d) { return d.GDP;} );
@@ -331,7 +345,7 @@ function generateVis(display_year, clicked_country = ""){
 			var max_Year = d3.max(dataset, function(d) { return d.Year;} );
 			var min_Year = d3.min(dataset, function(d) { return d.Year;} );
 
-		
+			// Set the domains of the x, y and rscales using the data
 			xScale.domain([min_GDP, max_GDP]);
 			yScale.domain([min_lifeExp -10, max_lifeExp]);
 			rScale.domain([Math.sqrt(min_Population/Math.PI), Math.sqrt(max_Population/Math.PI)])
@@ -368,7 +382,7 @@ function generateVis(display_year, clicked_country = ""){
 
 			var myButton = d3.select("#myButton");
 
-
+			// Append the list of years so that each can be clicked to see that data for that year
 			for(i=0;i<years.length;i++){
 				myButton.append("div")
 				.style("float","left")
@@ -378,6 +392,7 @@ function generateVis(display_year, clicked_country = ""){
 				.attr("id",years[i])
 				.text(years[i])
 				.on("click",function(d){
+					// Call all the functions for different bar/scatter/text plot on click of button
 					display_year = d3.select(this).text();
 					generateVisPlot(display_year);
 					generateVisPlot2(display_year);
@@ -397,10 +412,12 @@ function generateVis(display_year, clicked_country = ""){
  			d3.select("#startButton")
  				.on("click", function(){
  				if(this.innerHTML == "|| STOP"){
+ 					// If stopped then clear interval and change button value to Play
  					clearInterval(myInterval);
  					this.innerHTML= "&#9658; PLAY";
  				}
  				else{
+ 					// If played then start playing and change button value to Stop
  					startPlaying();
  					this.innerHTML= "|| STOP";
  				}
@@ -413,7 +430,8 @@ function generateVis(display_year, clicked_country = ""){
 
 function startPlaying(){
 		myInterval = setInterval(function() {
-			// display_year = years[index]
+			// Call all the functions for different visualisations for that year and loop until last year is reached
+
 			generateVisPlot(display_year);
 			generateVisPlot2(display_year);
 			generateVis(display_year);

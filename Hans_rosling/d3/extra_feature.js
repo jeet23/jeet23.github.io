@@ -29,21 +29,26 @@ generateExtraFeature = function generateExtraFeature(display_year){
 
 
 	// Per capita income = GDP / Population for each country for that year
-	var testArray = d3.map(filtered_datset, function(d) { return d.GDP/d.Population})
-	top10 = testArray.keys().sort(function(a, b){return b-a}).slice(0,10);
+	var pc_array = d3.map(filtered_datset, function(d) { return d.GDP/d.Population})
+	
+	// Sort the pc_array descending order and take the first 10 elements
+	// which represent highest Per capita income
+	top10_array = pc_array.keys().sort(function(a, b){return b-a}).slice(0,10);
 
 	per_capita_dataset = []
-	for(i = 0 ; i < top10.length; i++){
-		text = testArray['$'+top10[i]].Country;
+	for(i = 0 ; i < top10_array.length; i++){
+		// get Name of the country for each element of top10_array and push it to per_capita_dataset
+		text = pc_array['$'+top10_array[i]].Country;
 		per_capita_dataset.push(text);
 	}
 
+	// Use per_capita_dataset for showing the list of countries as the year changes
 	var top5Countries = svg.selectAll("#list_of_countries")
 		  				 	.data(per_capita_dataset, function key(d){
 		  				 		return d;
 		  				 	});
-
-		top5Countries.enter()
+	// enter section
+	top5Countries.enter()
 			.append("text")
 			.style("fill", "white")
 			.attr("y",function(d,i){ return i*20+100;})
@@ -54,8 +59,9 @@ generateExtraFeature = function generateExtraFeature(display_year){
 			.style("stroke","rgb(245, 177, 56")
 			.attr("id","list_of_countries")
 			.text(function(d,i){ return i+1 + ")" + d; });
-		
-		top5Countries
+	
+	// Update section	
+	top5Countries
 			.transition()
 			.duration(500)
 			.style("fill", "white")
@@ -67,33 +73,11 @@ generateExtraFeature = function generateExtraFeature(display_year){
 			.style("stroke","rgb(245, 177, 56")
 			.attr("id","list_of_countries")
 			.text(function(d,i){ return i+1 + ")" + d; });
-		top5Countries.exit().remove();
+	// exit section	
+	top5Countries.exit().remove();
 
 			
 
 }
-
-// Load the file data.csv and generate a visualisation based on it
-d3.csv("./data/Gapminder_All_Time.csv", function(error, data){
-	
-	var years = d3.map(data, function(d) { return d.Year}).keys().sort()
-	display_year = years[0]
-
-
-	// handle any data loading errors
-	if(error){
-		console.log("Something went wrong");
-		console.log(error);
-	}else{
-		console.log("Data Loaded");
-		
-		// Assign  the data object loaded to the global dataset variable
-		dataset = data;
-
-		// Generate the visualisation
-		// generateExtraFeature(display_year);
-
-	}
-});
 
 })
