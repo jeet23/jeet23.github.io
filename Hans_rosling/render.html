@@ -168,6 +168,13 @@ function getColorByRegion(regionList){
 
 function generateVis(display_year, clicked_country = ""){
 
+		d3.select("body").on("click", function(){
+			// Disables the clicked circle and brings back the original state of animation
+			if(d3.event.srcElement.tagName != "circle"){
+				generateVis(display_year);
+			}
+		})
+
 	  	var filtered_datset = dataset.filter(function yearFilter(value){
 	  				// if a country is clicked, store the class as country_circle / country_label and filter data
 	  				// based on that country

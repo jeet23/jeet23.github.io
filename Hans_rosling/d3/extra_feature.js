@@ -23,11 +23,17 @@ var svg = d3.select("#extra_feature")
 			.style("stroke","#33c33e")
 			.text("Highest Per-Capita Income");
 
+var yearToDisplayBehind = svg.append("text")
+							.attr("dx","-8.2em")
+							.attr("dy","1.4em")
+							.style("fill","white")
+							.style("opacity",1)
+
 generateExtraFeature = function generateExtraFeature(display_year){
 	var filtered_datset = dataset.filter(function yearFilter(value){
 					return (value.Year == display_year)});
 
-
+	yearToDisplayBehind.text("Year: " +display_year);
 	// Per capita income = GDP / Population for each country for that year
 	var pc_array = d3.map(filtered_datset, function(d) { return d.GDP/d.Population})
 	
@@ -53,7 +59,7 @@ generateExtraFeature = function generateExtraFeature(display_year){
 			.style("fill", "white")
 			.attr("y",function(d,i){ return i*20+100;})
 			.attr("dx","-10em")
-			.attr("dy","-3.5em")
+			.attr("dy","-2.9em")
 			.attr("font-size",20)
 			.attr("opacity", 0.8)
 			.style("stroke","rgb(245, 177, 56")
@@ -67,7 +73,7 @@ generateExtraFeature = function generateExtraFeature(display_year){
 			.style("fill", "white")
 			.attr("y",function(d,i){ return i*20+100;})
 			.attr("dx","-10em")
-			.attr("dy","-3.5em")
+			.attr("dy","-2.9em")
 			.attr("opacity", 0.8)
 			.attr("font-size",20)
 			.style("stroke","rgb(245, 177, 56")
