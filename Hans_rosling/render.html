@@ -212,6 +212,7 @@ function generateVis(display_year, clicked_country = ""){
 										return rScale(Math.sqrt(d.Population/Math.PI));
 									})
 					.style("fill", function(d){ return countryColorMap[d.Region]})
+					.style("stroke","darkgray");
 					.append("title")
 				   		.text(function(d){
 				   			return d.Country;
@@ -236,7 +237,8 @@ function generateVis(display_year, clicked_country = ""){
 				.attr("r", function(d){
 									return rScale(Math.sqrt(d.Population/Math.PI));
 								})
-				.style("fill", function(d){ return countryColorMap[d.Region]});
+				.style("fill", function(d){ return countryColorMap[d.Region]})
+				.style("stroke","darkgray");
 
 		   	points.on("mouseover", function(d){
 				d3.select(this)
