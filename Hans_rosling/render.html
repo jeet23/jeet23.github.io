@@ -212,7 +212,7 @@ function generateVis(display_year, clicked_country = ""){
 										return rScale(Math.sqrt(d.Population/Math.PI));
 									})
 					.style("fill", function(d){ return countryColorMap[d.Region]})
-					.style("stroke","darkgray");
+					.style("stroke","darkgray")
 					.append("title")
 				   		.text(function(d){
 				   			return d.Country;
